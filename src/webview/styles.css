@@ -1,18 +1,9 @@
+@import "tailwindcss";
 
-h1 {
-  font-family: var(--vscode-editor-font-family);
-}
-
-.app {
-  margin: 15px auto;
-  max-width: 80rem;
-}
-
-.app__actions {
-  display: flex;
-  gap: 1rem;
-}
-
-.app__error {
-  color: var(--vscode-editorError-foreground);
+/* make sure the webview takes the full size of the container */
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }

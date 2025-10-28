@@ -2,9 +2,8 @@ import * as React from 'react';
 import { messageHandler } from '@estruyf/vscode/dist/client';
 import "./styles.css";
 
-export interface IAppProps {}
 
-export const App: React.FunctionComponent<IAppProps> = ({ }: React.PropsWithChildren<IAppProps>) => {
+export const App: React.FC = () => {
   const [message, setMessage] = React.useState<string>("");
   const [error, setError] = React.useState<string>("");
 
@@ -29,26 +28,26 @@ export const App: React.FunctionComponent<IAppProps> = ({ }: React.PropsWithChil
   };
 
   return (
-    <div className='app'>
-      <h1>Hello from the React Webview Starter</h1>
+    <div className='app h-full w-full bg-gray-800'>
+      <h1 className='text-center py-4 font-bold '>Hello from the React Webview Starter</h1>
 
-      <div className='app__actions'>
-        <button onClick={sendMessage}>
+      <div className='flex gap-2 flex-col mb-4'>
+        <button onClick={sendMessage} className='border border-sky-300 rounded-sm mx-2'>
           Send message to extension
         </button>
 
-        <button onClick={requestData}>
+        <button onClick={requestData} className='border border-teal-300 rounded-sm mx-2'>
           Get data from extension
         </button>
 
-        <button onClick={requestWithErrorData}>
+        <button onClick={requestWithErrorData} className='border border-rose-300 rounded-sm mx-2'>
           Get data with error
         </button>
       </div>
 
-      {message && <p><strong>Message from the extension</strong>: {message}</p>}
+      {message && <p className='text-white text-center mb-2'><strong>Message from the extension</strong>: {message}</p>}
 
-      {error && <p className='app__error'><strong>ERROR</strong>: {error}</p>}
+      {error && <p className='text-red-200 text-center mb-w'><strong>ERROR</strong>: {error}</p>}
     </div>
   );
 };

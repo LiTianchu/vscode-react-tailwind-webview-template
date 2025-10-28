@@ -7,99 +7,108 @@ import { MessageHandlerData } from "@estruyf/vscode";
 import { readFileSync } from "fs";
 
 export function activate(context: vscode.ExtensionContext) {
-  let disposable = vscode.commands.registerCommand(
-    "vscode-react-webview-starter.openWebview",
-    () => {
-      const panel = vscode.window.createWebviewPanel(
-        "react-webview",
-        "React Webview",
-        vscode.ViewColumn.One,
-        {
-          enableScripts: true,
-          retainContextWhenHidden: true,
-        }
-      );
 
-      panel.webview.onDidReceiveMessage(
-        (message) => {
-          const { command, requestId, payload } = message;
-
-          if (command === "GET_DATA") {
-            // Do something with the payload
-
-            // Send a response back to the webview
-            panel.webview.postMessage({
-              command,
-              requestId, // The requestId is used to identify the response
-              payload: `Hello from the extension!`,
-            } as MessageHandlerData<string>);
-          } else if (command === "GET_DATA_ERROR") {
-            panel.webview.postMessage({
-              command,
-              requestId, // The requestId is used to identify the response
-              error: `Oops, something went wrong!`,
-            } as MessageHandlerData<string>);
-          } else if (command === "POST_DATA") {
-            vscode.window.showInformationMessage(
-              `Received data from the webview: ${payload.msg}`
-            );
-          }
-        },
-        undefined,
-        context.subscriptions
-      );
-
-      panel.webview.html = getWebviewContent(context, panel.webview);
-    }
-  );
-
-  context.subscriptions.push(disposable);
+    const provider = new MySidebarViewProvider(context);
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(
+            "myExtension.customView",
+            provider
+        )
+    );
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
 
-const getWebviewContent = (context: ExtensionContext, webview: Webview) => {
-  const jsFile = "main.bundle.js";
-  const localServerUrl = "http://localhost:9000";
 
-  let scriptUrl = [];
-  let cssUrl = null;
+class MySidebarViewProvider implements vscode.WebviewViewProvider {
+    private context: ExtensionContext;
 
-  const isProduction = context.extensionMode === ExtensionMode.Production;
-  if (isProduction) {
-    // Get the manifest file from the dist folder
-    const manifest = readFileSync(
-      join(context.extensionPath, "dist", "webview", "manifest.json"),
-      "utf-8"
-    );
-    const manifestJson = JSON.parse(manifest);
-    for (const [key, value] of Object.entries<string>(manifestJson)) {
-      if (key.endsWith(".js")) {
-        scriptUrl.push(
-          webview
-            .asWebviewUri(
-              Uri.file(join(context.extensionPath, "dist", "webview", value))
-            )
-            .toString()
-        );
-      }
+    constructor(context: ExtensionContext) {
+        this.context = context;
     }
-  } else {
-    scriptUrl.push(`${localServerUrl}/${jsFile}`);
-  }
 
-  return `<!DOCTYPE html>
+    resolveWebviewView(
+        webviewView: vscode.WebviewView,
+        // Not used currently, comment out to avoid linting issues
+        //resolveContext: vscode.WebviewViewResolveContext,
+        //token: vscode.CancellationToken
+    ) {
+        webviewView.webview.options = {
+            enableScripts: true,
+            localResourceRoots: [this.context.extensionUri]
+        };
+        webviewView.webview.onDidReceiveMessage(
+            (message) => {
+                const { command, requestId, payload } = message;
+
+                if (command === "GET_DATA") {
+                    // Do something with the payload
+
+                    // Send a response back to the webview
+                    webviewView.webview.postMessage({
+                        command,
+                        requestId, // The requestId is used to identify the response
+                        payload: `Hello from the extension!`,
+                    } as MessageHandlerData<string>);
+                } else if (command === "GET_DATA_ERROR") {
+                    webviewView.webview.postMessage({
+                        command,
+                        requestId, // The requestId is used to identify the response
+                        error: `Oops, something went wrong!`,
+                    } as MessageHandlerData<string>);
+                } else if (command === "POST_DATA") {
+                    vscode.window.showInformationMessage(
+                        `Received data from the webview: ${payload.msg}`
+                    );
+                }
+            },
+            undefined,
+            this.context.subscriptions
+        );
+        webviewView.webview.html = this.getWebviewContent(this.context, webviewView.webview);
+    }
+
+    getWebviewContent = (context: ExtensionContext, webview: Webview) => {
+        const jsFile = "main.bundle.js";
+        const localServerUrl = "http://localhost:9000";
+
+        const scriptUrl = [];
+        const isProduction = context.extensionMode === ExtensionMode.Production;
+        if (isProduction) {
+            // Get the manifest file from the dist folder
+            const manifest = readFileSync(
+                join(context.extensionPath, "dist", "webview", "manifest.json"),
+                "utf-8"
+            );
+            const manifestJson = JSON.parse(manifest);
+            for (const [key, value] of Object.entries<string>(manifestJson)) {
+                if (key.endsWith(".js")) {
+                    scriptUrl.push(
+                        webview
+                            .asWebviewUri(
+                                Uri.file(join(context.extensionPath, "dist", "webview", value))
+                            )
+                            .toString()
+                    );
+                }
+            }
+        } else {
+            scriptUrl.push(`${localServerUrl}/${jsFile}`);
+        }
+
+        return `<!DOCTYPE html>
 	<html lang="en">
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		${isProduction ? `<link href="${cssUrl}" rel="stylesheet">` : ""}
 	</head>
 	<body>
-		<div id="root"></div>
+		<div id="root" class="w-full h-full"></div>
 
 		${scriptUrl.map((url) => `<script src="${url}"></script>`).join("\n")}
 	</body>
 	</html>`;
-};
+    };
+
+}
