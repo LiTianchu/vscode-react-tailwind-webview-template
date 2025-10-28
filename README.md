@@ -1,10 +1,10 @@
 # Visual Studio Code Webview Extension - React + Tailwind
-This is a starter template for creating a Visual Studio Code extension with a React webview.
+This is a starter template for creating a Visual Studio Code extension with a React webview and modern Tailwind CSS support.
 Based on the template at https://github.com/estruyf/vscode-react-webview-template
 
 <b>Key modifications:</b>
 - Upgraded old packages
-- Removed legacy `.eslintrc` and removed with flat config `eslint.config.mts`
+- Removed legacy `.eslintrc` and replaced with flat config `eslint.config.mts`
 - Added Tailwind CSS version 4
 - Demonstrated embedding webview in the Primary Side Bar (Left Side Bar)
 
